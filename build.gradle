@@ -1,0 +1,77 @@
+plugins {
+    id 'java'
+    id 'org.liquibase.gradle' version '2.0.4'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    liquibaseRuntime 'org.liquibase:liquibase-core:4.20.0'
+    liquibaseRuntime 'org.postgresql:postgresql:42.6.0'
+    liquibaseRuntime 'info.picocli:picocli:4.6.3'
+    liquibaseRuntime 'org.yaml:snakeyaml:1.29'
+}
+
+liquibase {
+    activities {
+        main {
+            changeLogFile 'src/main/resources/db/changelog/changelog-master.xml'
+            url 'jdbc:postgresql://localhost:5432/postgres' // Cambia si usas otro nombre de base de datos
+            username 'deyane' // Cambia al nombre de usuario que corresponda
+            password '123' // Cambia a la contraseña correspondiente
+            defaultSchemaName 'bootcamp'
+            driver 'org.postgresql.Driver'
+        }
+    }
+}
+
+task createMigrationFolder {
+    doLast {
+        def migrationFolder = project.hasProperty('migrationFolder') ? project.property('migrationFolder') : null
+        if (migrationFolder) {
+            def folder = file("src/main/resources/db/${migrationFolder}")
+            if (!folder.exists()) {
+                folder.mkdirs()
+                println "Folder created at: src/main/resources/db/${migrationFolder}"
+            } else {
+                println "Folder already exists at: src/main/resources/db/${migrationFolder}"
+            }
+        } else {
+            println "Please specify the migrationFolder parameter."
+        }
+    }
+}
+
+task liquibaseClearCheckSums(type: org.liquibase.gradle.LiquibaseTask) {
+    description = 'Clear Liquibase checksums'
+    command = 'clearCheckSums'
+}
+
+task createMigration {
+    doLast {
+        def migrationFolder = project.hasProperty('migrationFolder') ? project.property('migrationFolder') : 'default_folder'
+        def migration = project.hasProperty('migration') ? project.property('migration') : 'new_migration'
+
+        def folder = file("src/main/resources/db/${migrationFolder}")
+        if (!folder.exists()) {
+            folder.mkdirs()
+        }
+
+        def migrationFile = new File(folder, "${migration}.sql")
+        if (!migrationFile.exists()) {
+            migrationFile.text = "-- SQL script for ${migration}\n"
+            println "Migration file created at: src/main/resources/db/${migrationFolder}/${migration}.sql"
+        } else {
+            println "Migration file already exists at: src/main/resources/db/${migrationFolder}/${migration}.sql"
+        }
+    }
+}
+
+// Task to run the Liquibase update and apply all changesets
+task updateDatabase(type: org.liquibase.gradle.LiquibaseTask) {
+    description = 'Applies the Liquibase migrations'
+    command = 'update'
+}
+

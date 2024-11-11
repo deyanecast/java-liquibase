@@ -1,0 +1,42 @@
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!-- Crear la tabla proyectos -->
+    <changeSet id="2" author="iris">
+        <sqlFile path="../scripts/tabla_proyectos.sql" relativeToChangelogFile="true"/>
+    </changeSet>
+
+    <!-- Crear la tabla usuarios -->
+    <changeSet id="3" author="iris">
+        <sqlFile path="../scripts/tabla_usuarios.sql" relativeToChangelogFile="true"/>
+    </changeSet>
+
+    <!-- Crear la tabla tareas (dependiente de proyectos y usuarios) -->
+    <changeSet id="4" author="iris">
+        <sqlFile path="../scripts/tabla_tareas.sql" relativeToChangelogFile="true"/>
+    </changeSet>
+
+    <!-- Crear la tabla permisos -->
+    <changeSet id="5" author="iris">
+        <sqlFile path="../scripts/tabla_permisos.sql" relativeToChangelogFile="true"/>
+    </changeSet>
+
+    <!-- Crear la tabla roles -->
+    <changeSet id="6" author="iris">
+        <sqlFile path="../scripts/tabla_roles.sql" relativeToChangelogFile="true"/>
+    </changeSet>
+
+    <!-- Crear la tabla rol_permisos (relación entre roles y permisos) -->
+    <changeSet id="7" author="iris">
+        <sqlFile path="../scripts/tabla_rol_permisos.sql" relativeToChangelogFile="true"/>
+    </changeSet>
+
+    <!-- Crear la tabla usuario_proyectos (relación entre usuarios y proyectos) -->
+    <changeSet id="8" author="iris">
+        <sqlFile path="../scripts/table_usuario_proyectos.sql" relativeToChangelogFile="true"/>
+    </changeSet>
+
+</databaseChangeLog>
