@@ -79,12 +79,14 @@ if (!tasks.findByName('dbDoc')) {
     task dbDoc(type: JavaExec) {
         classpath configurations.liquibaseRuntime
         main = "liquibase.integration.commandline.Main"
-        args = ["--changeLogFile=src/main/resources/db/changelog/changelog-master.xml",
-                "--url=${project.hasProperty('db.url') ? project.property('db.url') : 'jdbc:postgresql://localhost:5432/postgres'}",
-                "--username=${project.hasProperty('db.user') ? project.property('db.user') : 'postgres'}",
-                "--password=${project.hasProperty('db.password') ? project.property('db.password') : 'postgres'}",
-                "dbDoc",
-                "build/database-docs"]
+        args = [
+            "--changeLogFile=src/main/resources/db/changelog/changelog-master.xml",
+            "--url=${project.hasProperty('db.url') ? project.property('db.url') : 'jdbc:postgresql://localhost:5432/postgres'}",
+            "--username=${project.hasProperty('db.user') ? project.property('db.user') : 'postgres'}",
+            "--password=${project.hasProperty('db.password') ? project.property('db.password') : 'postgres'}",
+            "dbDoc",
+            "build/database-docs"
+        ]
     }
 }
 
