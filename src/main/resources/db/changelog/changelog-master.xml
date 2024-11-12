@@ -5,14 +5,16 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
 
-    <changeSet id="1" author="deyane">
-        <sql>
-            CREATE SCHEMA IF NOT EXISTS bootcamp;
-        </sql>
-    </changeSet>
-
-    <changeSet id="20241112120029651" author="deyane">
-        <sqlFile path="changes/20241112120029651_bootcamp.sql" relativeToChangelogFile="true"/>
-    </changeSet>
+    <!-- Cambios del esquema base -->
+    <include file="changes/schema/changelog-schema.xml" relativeToChangelogFile="true"/>
+    
+    <!-- Scripts de creación de esquema -->
+    <include file="../scripts/01_create_schema.sql" relativeToChangelogFile="true"/>
+    
+    <!-- Scripts de creación de tablas -->
+    <include file="../scripts/tables/01_create_tables.sql" relativeToChangelogFile="true"/>
+    
+    <!-- Cambios específicos del bootcamp -->
+    <include file="changes/20241112120029651_bootcamp.sql" relativeToChangelogFile="true"/>
 
 </databaseChangeLog>
