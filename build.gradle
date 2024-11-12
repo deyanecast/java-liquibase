@@ -1,77 +1,76 @@
 plugins {
-    id 'java'
-    id 'org.liquibase.gradle' version '2.0.4'
+    id 'org.liquibase.gradle' version '2.2.0'
 }
 
 repositories {
     mavenCentral()
 }
 
+configurations {
+    liquibaseRuntime
+}
+
 dependencies {
     liquibaseRuntime 'org.liquibase:liquibase-core:4.20.0'
     liquibaseRuntime 'org.postgresql:postgresql:42.6.0'
-    liquibaseRuntime 'info.picocli:picocli:4.6.3'
-    liquibaseRuntime 'org.yaml:snakeyaml:1.29'
+    liquibaseRuntime 'info.picocli:picocli:4.7.5'
+    liquibaseRuntime 'ch.qos.logback:logback-classic:1.4.14'
+    liquibaseRuntime 'org.yaml:snakeyaml:2.0'
 }
 
 liquibase {
     activities {
         main {
-            changeLogFile 'src/main/resources/db/changelog/changelog-master.xml'
-            url 'jdbc:postgresql://localhost:5432/postgres' // Cambia si usas otro nombre de base de datos
-            username 'deyane' // Cambia al nombre de usuario que corresponda
-            password '123' // Cambia a la contraseña correspondiente
-            defaultSchemaName 'bootcamp'
-            driver 'org.postgresql.Driver'
+            arguments = [
+                'changeLogFile': 'src/main/resources/db/changelog/changelog-master.xml',
+                'url': project.hasProperty('db.url') ? project.property('db.url') : 
+                    "jdbc:postgresql://${System.getenv('DB_HOST') ?: 'localhost'}:${System.getenv('DB_PORT') ?: '5432'}/${System.getenv('DB_NAME') ?: 'postgres'}",
+                'username': project.hasProperty('db.user') ? project.property('db.user') : System.getenv('DB_USER'),
+                'password': project.hasProperty('db.password') ? project.property('db.password') : System.getenv('DB_PASSWORD'),
+                'defaultSchemaName': 'bootcamp'
+            ]
         }
     }
+    runList = 'main'
 }
 
-task createMigrationFolder {
+task createChangeset {
+    description 'Creates a new changeset file with timestamp'
+    group = 'Liquibase'
+
     doLast {
-        def migrationFolder = project.hasProperty('migrationFolder') ? project.property('migrationFolder') : null
-        if (migrationFolder) {
-            def folder = file("src/main/resources/db/${migrationFolder}")
-            if (!folder.exists()) {
-                folder.mkdirs()
-                println "Folder created at: src/main/resources/db/${migrationFolder}"
-            } else {
-                println "Folder already exists at: src/main/resources/db/${migrationFolder}"
-            }
-        } else {
-            println "Please specify the migrationFolder parameter."
+        if (!project.hasProperty('name')) {
+            throw new GradleException("Please provide a name for the changeset: -Pname=\"your changeset name\"")
         }
+
+        def timestamp = new Date().format('yyyyMMddHHmmssSSS')
+        def fileName = timestamp + '_' + project.property('name').toString().toLowerCase().replaceAll(' ', '_') + '.sql'
+        def author = System.getProperty('user.name')
+        def changesetPath = 'src/main/resources/db/changelog/changes'
+        def file = new File("${changesetPath}/${fileName}")
+
+        file.parentFile.mkdirs()
+        file.text = """-- Changeset ${author}:${timestamp}
+-- Comment: ${project.property('name')}
+
+"""
+
+        def masterFile = new File('src/main/resources/db/changelog/changelog-master.xml')
+        def masterContent = masterFile.text
+        def insertPoint = masterContent.lastIndexOf('</databaseChangeLog>')
+        
+        if (insertPoint > 0) {
+            def newChangeset = """    <changeSet id="${timestamp}" author="${author}">
+        <sqlFile path="changes/${fileName}" relativeToChangelogFile="true"/>
+    </changeSet>
+
+</databaseChangeLog>"""
+            
+            masterContent = masterContent.substring(0, insertPoint) + newChangeset
+            masterFile.text = masterContent
+        }
+
+        println "Created new changeset: ${fileName}"
     }
-}
-
-task liquibaseClearCheckSums(type: org.liquibase.gradle.LiquibaseTask) {
-    description = 'Clear Liquibase checksums'
-    command = 'clearCheckSums'
-}
-
-task createMigration {
-    doLast {
-        def migrationFolder = project.hasProperty('migrationFolder') ? project.property('migrationFolder') : 'default_folder'
-        def migration = project.hasProperty('migration') ? project.property('migration') : 'new_migration'
-
-        def folder = file("src/main/resources/db/${migrationFolder}")
-        if (!folder.exists()) {
-            folder.mkdirs()
-        }
-
-        def migrationFile = new File(folder, "${migration}.sql")
-        if (!migrationFile.exists()) {
-            migrationFile.text = "-- SQL script for ${migration}\n"
-            println "Migration file created at: src/main/resources/db/${migrationFolder}/${migration}.sql"
-        } else {
-            println "Migration file already exists at: src/main/resources/db/${migrationFolder}/${migration}.sql"
-        }
-    }
-}
-
-// Task to run the Liquibase update and apply all changesets
-task updateDatabase(type: org.liquibase.gradle.LiquibaseTask) {
-    description = 'Applies the Liquibase migrations'
-    command = 'update'
 }
 
